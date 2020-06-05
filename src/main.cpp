@@ -1,4 +1,5 @@
 #include <Arduino.h> // I mean... I don't to write everything from scratch ;(
+#include <cppQueue.h>
 
 /* Radio Stuff */
 #include <RH_NRF905.h>
@@ -10,7 +11,7 @@
 #include <ESPAsyncWebServer.h>
 #include "FS.h"
 
-/* TODO: Random generation */
+/* TODO: Load from FS */
 const char *ssid = "InStorm-XFGO4K";
 const char *password = "demo_password";
 
@@ -22,6 +23,9 @@ RHMesh mesh(nrf905, 20); // ADDR fix
 IPAddress local_IP(192,168,1,1); // 192.168.1.x, cuz 10.x.x.x would be later used in modern versions in routing.
 IPAddress gateway(192,168,1,1);
 IPAddress subnet(255,255,255,0);
+
+uint8_t kl_buf[RH_MESH_MAX_MESSAGE_LEN];
+Queue	q(sizeof(kl_buf), 10, LIFO);	// Instantiate queue
 
 void setup() {
   delay(1000); // Pre-start delay
@@ -57,7 +61,7 @@ void setup() {
         if (mesh.sendtoWait(buf, sizeof(buf), addr) == RH_ROUTER_ERROR_NONE) {
           request->send(500, "text/plain", "fail");
         } else {
-          request->send(200, "text/plain", "success");
+          request->send(200, "text/plain", "OK");
         }
     } else {
        request->send(500, "text/plain", "fail");
@@ -65,7 +69,18 @@ void setup() {
   });
 
   server.on("/api/v1/poll", HTTP_GET, [](AsyncWebServerRequest *request){
-    request->send(200, "text/plain", String(random(1000))); // Just testing programmability of a server. DELETE later. TODO
+    uint8_t l_buf[RH_MESH_MAX_MESSAGE_LEN];
+    if (q.pop(&l_buf)) {
+      std::string s(l_buf, l_buf + sizeof(l_buf));
+      request->send(200, "text/plain", s.c_str());
+    } else {
+      request->send(500, "text/plain", String("no_new_msg"));
+    }
+  });
+
+
+  server.on("/api/v1/name", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(200, "text/plain", String(ssid));
   });
 
   server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html"); // Serving main Web-UI
@@ -87,15 +102,12 @@ void setup() {
 }
 
 void loop() {
-  uint8_t buf[RH_MESH_MAX_MESSAGE_LEN];
-  uint8_t len = sizeof(buf);
+  uint8_t l_buf[RH_MESH_MAX_MESSAGE_LEN];
+  uint8_t len = sizeof(l_buf);
   uint8_t from;
 
-  if (mesh.recvfromAck(buf, &len, &from))
+  if (mesh.recvfromAck(l_buf, &len, &from))
   {
-    Serial.print("got request from : 0x");
-    Serial.print(from, HEX);
-    Serial.print(": ");
-    Serial.println((char*)buf);
+    q.push(l_buf);
   }
 }
