@@ -1,5 +1,3 @@
-int addr = 0;
-
 #include <Arduino.h> // I mean... I don't to write everything from scratch ;(
 
 /* Radio Stuff */
@@ -19,13 +17,11 @@ const char *password = "demo_password";
 AsyncWebServer server(80); // Setting up API Web-server
 
 RH_NRF905 nrf905; // Initializing NRF905 Radio Driver
-RHMesh mesh(nrf905, addr);
+RHMesh mesh(nrf905, 20); // ADDR fix
 
 IPAddress local_IP(192,168,1,1); // 192.168.1.x, cuz 10.x.x.x would be later used in modern versions in routing.
 IPAddress gateway(192,168,1,1);
 IPAddress subnet(255,255,255,0);
-
-uint8_t data[] = "hmmmm";
 
 void setup() {
   delay(1000); // Pre-start delay
@@ -50,6 +46,28 @@ void setup() {
   server.on("/random", HTTP_GET, [](AsyncWebServerRequest *request){
     request->send(200, "text/plain", String(random(1000))); // Just testing programmability of a server. DELETE later. TODO
   });
+
+  server.on("/api/v1/send", HTTP_POST, [](AsyncWebServerRequest *request){
+    uint8_t addr;
+    u_char buf[RH_MESH_MAX_MESSAGE_LEN];
+    
+    if (request->hasParam("addr", true) && request->hasParam("body", true)) {
+        addr = request->getParam("addr", true)->value().toInt();
+        request->getParam("body", true)->value().getBytes(buf, RH_MESH_MAX_MESSAGE_LEN);
+        if (mesh.sendtoWait(buf, sizeof(buf), addr) == RH_ROUTER_ERROR_NONE) {
+          request->send(500, "text/plain", "fail");
+        } else {
+          request->send(200, "text/plain", "success");
+        }
+    } else {
+       request->send(500, "text/plain", "fail");
+    };
+  });
+
+  server.on("/api/v1/poll", HTTP_GET, [](AsyncWebServerRequest *request){
+    request->send(200, "text/plain", String(random(1000))); // Just testing programmability of a server. DELETE later. TODO
+  });
+
   server.serveStatic("/", SPIFFS, "/").setDefaultFile("index.html"); // Serving main Web-UI
 
   server.begin();
@@ -68,20 +86,16 @@ void setup() {
   nrf905.setRF(RH_NRF905::TransmitPower10dBm); // Setting up power to max, cuz: "why not?"
 }
 
-uint8_t buf[RH_MESH_MAX_MESSAGE_LEN];
-
 void loop() {
+  uint8_t buf[RH_MESH_MAX_MESSAGE_LEN];
   uint8_t len = sizeof(buf);
   uint8_t from;
+
   if (mesh.recvfromAck(buf, &len, &from))
   {
     Serial.print("got request from : 0x");
     Serial.print(from, HEX);
     Serial.print(": ");
     Serial.println((char*)buf);
-
-    // Send a reply back to the originator client
-    if (mesh.sendtoWait(data, sizeof(data), from) != RH_ROUTER_ERROR_NONE) // Little echo going on, prob need to create new vars to put OUR (r/unexpectedcommunism) values to it
-      Serial.println("sendtoWait failed");
   }
 }
