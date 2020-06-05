@@ -1,78 +1,66 @@
-<html>
-    <head>
-        <title>InStorm Alpha</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="icon" href="data:,">
-        <link href="pure.min.css" rel="stylesheet" type="text/css">
-        <script src="Chart.min.js"></script>
-    </head>
-    <body>
-        <section class="section">
-            <nav class="level">
-                <div class="level-item">
-                    <h1 class="title is-3" style="margin-top: 5pt;">InStorm Alpha</h1>
-                </div>
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8"/>
+		<title>terminal.js test</title>
+		<script src="term.min.js"></script>
+	</head>
+	<body>
+		<h1>terminal.js test</h1>
 
-                <div class="level-item columns">
-                    <a href="sos" class="button is-warning is-medium" style="margin-right: 10pt; margin-top: 5pt;">
-                        Сообщить о задержании
-                    </a>
-                    
-                    <a href="warning" class="button is-danger is-medium" style="margin-top: 5pt;">
-                        SOS
-                    </a>
-                </div>
-            </nav>
-            <br>
-            <div class="container is-fluid">
-                <div class="notification is-warning" >
-                    Внимание! Проект все еще в разработке! Возможно падение ежиков с неба!
-                </div>
-            </div>
-        </section>
-        <section class="section">
-            <div class="tile is-ancestor">
-                <div class="tile is-4 is-vertical is-parent">
-                  <article class="tile is-child box">
-                        <p class="title">Статус</p>
-                        <div class="notification is-success">
-                            <p class="title is-size-2">В сети</p>
-                        </div>
-                  </article>
-                  <article class="tile is-child box">
-                        <p class="title">Соседи</p>
-                        <div class="notification has-background-black has-text-white">
-                            <p class="title is-size-2">25</p>
-                        </div>
-                  </article>
-                </div>
-                <div class="tile is-parent">
-                  <div class="tile is-child box">
-                    <p class="title is-family-monospace">ping gateway.storm</p>
-                    <div><canvas id="chart_1"></canvas></div>
-                  </div>
-                </div>
-              </div>
-        </section>
-        <script>
-            var ctx = document.getElementById('chart_1').getContext('2d');
-            var chart = new Chart(ctx, {
-                // The type of chart we want to create
-                type: 'line',
-                cubicInterpolationMode: "monotone",
+		<button onclick="t1.beep()">Play the beep!</button>
+		<br>
+		<br>
 
-                // The data for our dataset
-                data: {
-                    labels: ['T+00', 'T+05', 'T+10', 'T+15', 'T+20', 'T+25', 'T+30', 'T+35', 'T+40', 'T+45', 'T+50', 'T+55', 'T+60'],
-                    datasets: [{
-                        borderColor: 'rgb(195, 95, 232)',
-                        data: [0, 100, 70, 100, 110, 120, 100, 60, 100, 70, 100, 110, 120, 100, /* It's a crutch, but OK. FIXME (MaxVal Set) -> */ 400]
-                    }]
-                },
+		<script>
+			var t1 = new Terminal()
+			t1.setHeight("200px")
+			t1.setWidth('600px')
+			document.body.appendChild(t1.html)
 
-                // Configuration options go here
-                options: {}
-            });
-        </script>    
-    </body>
+			var t2 = new Terminal()
+			t2.setHeight("250px")
+			t2.setWidth('650px')
+			t2.setBackgroundColor('blue')
+			t2.blinkingCursor(false)
+			document.body.appendChild(t2.html)
+
+			t1.print('Hello, world!')
+			t1.input('Whats your name?', function (input) {
+				t1.print('Welcome, ' + input)
+
+				t2.sleep(1000, function () {
+					t2.print('Hello again!')
+					t2.input('Whats your name again?', function (input) {
+						t2.print('Welcome again, ' + input)
+					})
+				})
+			})
+
+			var t3 = new Terminal('terminal_3')
+			t3.setHeight("180px")
+			t3.setWidth('550px')
+			t3.setBackgroundColor('green')
+			document.body.appendChild(t3.html)
+			t3.password('Enter password:', function (password) {
+				t3.print('Your password is: ' + password)
+			})
+
+			var paragraph = document.createElement("p")
+			var t3bySelector = document.querySelector("#terminal_3")
+			paragraph.innerHTML = t3bySelector && t3bySelector.id ? 'The 3rd terminal has id: ' + t3bySelector.id : 'Assigning an id at initialization doesnt semm to work!'
+			document.body.appendChild(paragraph)
+
+			var t4 = new Terminal('terminal_3')
+			t4.setHeight("180px")
+			t4.setWidth('550px')
+			t4.setBackgroundColor('green')
+			document.body.appendChild(t4.html)
+			t4.confirm('Are you sure?', function (didConfirm) {
+				t4.print(didConfirm ? 'OK' : 'Why not?')
+			})
+
+		</script>
+
+	</body>
 </html>
