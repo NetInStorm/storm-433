@@ -17,7 +17,7 @@ const char *password = "demo_password";
 
 AsyncWebServer server(80); // Setting up API Web-server
 
-RH_NRF905 nrf905; // Initializing NRF905 Radio Driver
+RH_NRF905 nrf905(5, 4, 15); // Initializing NRF905 Radio Driver
 RHMesh mesh(nrf905, 21); // ADDR fix
 
 IPAddress local_IP(192,168,1,1); // 192.168.1.x, cuz 10.x.x.x would be later used in modern versions in routing.
@@ -90,9 +90,18 @@ void setup() {
 
   /* Setting up NRF905 Logic */
   Serial.print("Setting nrf905 ... ");
-  if (nrf905.init() && mesh.init()) {
+  if (nrf905.init()) {
     Serial.println("Ready");
-    nrf_state = "INIT";
+    nrf_state = "RAD-INIT";
+  } else {
+    Serial.println("Failed!\n");
+    Serial.println("Resetting now!");
+  }
+
+  Serial.print("Setting up mesh ... ");
+  if (mesh.init()) {
+    Serial.println("Ready");
+    nrf_state = "MESH-INIT";
   } else {
     Serial.println("Failed!\n");
     Serial.println("Resetting now!");
