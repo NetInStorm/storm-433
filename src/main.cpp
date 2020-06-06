@@ -12,13 +12,13 @@
 #include "FS.h"
 
 /* TODO: Load from FS */
-const char *ssid = "InStorm-XFGO4K";
+const char *ssid = "InStorm-ZYHP5L";
 const char *password = "demo_password";
 
 AsyncWebServer server(80); // Setting up API Web-server
 
 RH_NRF905 nrf905; // Initializing NRF905 Radio Driver
-RHMesh mesh(nrf905, 20); // ADDR fix
+RHMesh mesh(nrf905, 21); // ADDR fix
 
 IPAddress local_IP(192,168,1,1); // 192.168.1.x, cuz 10.x.x.x would be later used in modern versions in routing.
 IPAddress gateway(192,168,1,1);
