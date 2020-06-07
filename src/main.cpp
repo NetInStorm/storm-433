@@ -1,4 +1,4 @@
-#include <Arduino.h> // I mean... I don't to write everything from scratch ;(
+#include <Arduino.h> // I mean... I don't want to write everything from scratch ;(
 #include <cppQueue.h>
 
 /* Radio Stuff */
@@ -54,7 +54,7 @@ void setup() {
 
   server.on("/api/v1/send", HTTP_POST, [](AsyncWebServerRequest *request){
     uint8_t addr;
-    u_char *buf;
+    uint8_t buf[] = "        "; // Yep, that's a crutch, need a fix. (I am not a CPP programmer, save me pls!)
     String data;
     Serial.println("[Wi-Fi] Request on /api/v1/send");
 
